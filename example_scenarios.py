@@ -15,6 +15,8 @@ class ReachAvoid:
     This example involves moving a robot with double integrator
     dynamics past an obstacle and to a goal postion with bounded
     control effort. 
+
+    It also serves as a template class for more complex examples.
     """
     def __init__(self, initial_state):
         """
@@ -197,5 +199,101 @@ class ReachAvoid:
 
         ax.scatter(x_position,y_position)
 
+class EitherOr(ReachAvoid):
+    """
+    This example involves moving a robot with double integrator
+    dynamics past an obstacle and to a goal postion with bounded
+    control effort, but first reaching one of two target regions
+    """
+    def __init__(self, initial_state):
+        """
+        Set up the example scenario with the initial state, which should be a (4,1) numpy
+        array with [x,x',y,y'].
+        """
 
+        self.x0 = np.asarray(initial_state)
+
+        self.T = 20  # The time bound of our specification
+
+        # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
+        self.obstacle_vert = (3,5,4,6)
+        self.goal_vert = (7,8,8,9)
+        self.target1_vert = (6,7,4.5,5.5)
+        self.target2_vert = (1,2,4.5,5.5)
+
+        # Now we'll define the STL specification. We'll do this over
+        # the signal s, which is a list of x, y coordinates and the control
+        # input u at each timestep. 
+
+        # Obstacle and goal constraints
+        hit_obstacle = self.in_rectangle_formula(self.obstacle_vert) 
+        at_goal = self.in_rectangle_formula(self.goal_vert)
+        
+        self.obstacle_avoidance = hit_obstacle.negation().always(0,self.T)
+        self.reach_goal = at_goal.eventually(0,self.T)
+
+        # Intermediate target constraints
+        at_target1 = self.in_rectangle_formula(self.target1_vert)
+        reach_target1 = at_target1.eventually(0,15)
+        
+        at_target2 = self.in_rectangle_formula(self.target2_vert)
+        reach_target2 = at_target2.eventually(0,15)
+
+        self.intermediate_target = reach_target1.disjunction(reach_target2)
+
+        # Control constraints
+        umin = - 0.9
+        umax = 0.9
+        u1_above_min = STLFormula(lambda s, t : s[t,2] - umin)
+        u1_below_max = STLFormula(lambda s, t : -s[t,2] + umax)
+        u2_above_min = STLFormula(lambda s, t : s[t,3] - umin)
+        u2_below_max = STLFormula(lambda s, t : -s[t,3] + umax)
+
+        u1_valid = u1_above_min.conjunction(u1_below_max)
+        u2_valid = u2_above_min.conjunction(u2_below_max)
+
+        self.control_bounded = u1_valid.conjunction(u2_valid).always(0,self.T)
+
+        # Full specification
+        self.full_specification = self.obstacle_avoidance.conjunction(self.reach_goal).conjunction(self.control_bounded).conjunction(self.intermediate_target)
+
+    def plot_scenario(self, ax):
+        """
+        Create a plot of the obstacle and goal regions on
+        the given matplotlib axis.
+        """
+        ax.set_xlim((0,10))
+        ax.set_ylim((0,10))
+
+        # Unpack region's sizes and positions
+        obs_x = self.obstacle_vert[0]
+        obs_y = self.obstacle_vert[2]
+        obs_w = self.obstacle_vert[1]-obs_x
+        obs_h = self.obstacle_vert[3]-obs_y
+
+        goal_x = self.goal_vert[0]
+        goal_y = self.goal_vert[2]
+        goal_w = self.goal_vert[1]-goal_x
+        goal_h = self.goal_vert[3]-goal_y
+
+        target1_x = self.target1_vert[0]
+        target1_y = self.target1_vert[2]
+        target1_w = self.target1_vert[1]-target1_x
+        target1_h = self.target1_vert[3]-target1_y
+
+        target2_x = self.target2_vert[0]
+        target2_y = self.target2_vert[2]
+        target2_w = self.target2_vert[1]-target2_x
+        target2_h = self.target2_vert[3]-target2_y
+
+        obstacle = Rectangle((obs_x,obs_y),obs_w,obs_h,color='red',alpha=0.5)
+        goal = Rectangle((goal_x,goal_y),goal_w,goal_h, color='green',alpha=0.5)
+
+        target1 = Rectangle((target1_x,target1_y),target1_w,target1_h, color='blue',alpha=0.5)
+        target2 = Rectangle((target2_x,target2_y),target2_w,target2_h, color='blue',alpha=0.5)
+
+        ax.add_patch(obstacle)
+        ax.add_patch(goal)
+        ax.add_patch(target1)
+        ax.add_patch(target2)
 
