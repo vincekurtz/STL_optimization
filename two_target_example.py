@@ -17,7 +17,7 @@ from scipy.optimize import minimize
 from example_scenarios import EitherOr
 
 # initialize the example with an initial state
-x0 = np.asarray([3,0,0,0])[:,np.newaxis]
+x0 = np.asarray([0,0,0,0])[:,np.newaxis]
 example = EitherOr(x0)
 
 # Set up and solve an optimization problem over u

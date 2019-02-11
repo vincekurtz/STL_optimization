@@ -151,6 +151,9 @@ class ReachAvoid:
             J    : a scalar value indicating the degree of satisfaction of the specification.
                    (negative ==> satisfied)
         """
+        # enforce that the input is a numpy array
+        u = np.asarray(u)
+
         # Reshape the control input to (mxT). Vector input is required for some optimization libraries
         T = int(len(u)/2)
         u = u.reshape((2,T))
@@ -234,10 +237,10 @@ class EitherOr(ReachAvoid):
 
         # Intermediate target constraints
         at_target1 = self.in_rectangle_formula(self.target1_vert)
-        reach_target1 = at_target1.eventually(0,15)
+        reach_target1 = at_target1.eventually(0,13)
         
         at_target2 = self.in_rectangle_formula(self.target2_vert)
-        reach_target2 = at_target2.eventually(0,15)
+        reach_target2 = at_target2.eventually(0,13)
 
         self.intermediate_target = reach_target1.disjunction(reach_target2)
 
