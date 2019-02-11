@@ -21,4 +21,4 @@ algorithms can be applied to this function.
 `optimization_comparison.py` compares several optimization approaches on one of
 the examples in `example_scenarios.py`. It can be used to generate plots like the one shown below:
 
-![comparison figure](comparison.jpg)
+![comparison figure](comparison.png)
