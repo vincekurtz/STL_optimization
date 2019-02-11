@@ -17,12 +17,10 @@ from skopt import gp_minimize
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import EitherOr
 
-# initialize the example with an initial state
-x0 = np.asarray([0,0,0,0])[:,np.newaxis]
-sys = EitherOr(x0)
-
-# Defining custom optimization functions
-def basinhopping_custom(fun, x0, args=(), **options):
+# Defining custom optimization functions. These should be defined as
+# described in the scipy.optimize documentation:
+# https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#custom-minimizers
+def basinhopping_method(fun, x0, args=(), **options):
     """
     Basinhopping, a simulated annealing-like approach
     """
@@ -41,40 +39,81 @@ def gp_bayesian(fun, x0, args=(), **options):
     res.x = np.asarray(res.x)  # ensures output is a numpy array
     return res
 
-# Set up and solve an optimization problem over u
-u_guess = np.zeros((2,21)).flatten()   # initial guess
+def add_to_comparison(method, name, ax, options=None):
+    """
+    Evaluate the given optimization method on the EitherOr scenario,
+    and plot the results. 
 
-start_time = time.time()
-res = minimize(sys.cost_function, u_guess,
-        method=gp_bayesian,
-        options={
-                    'disp':True,
-                    'adaptive':True,
-                    'maxiter':20000,
-                    'ftol':1e-6,
-                    'xtol':1e-6
-                }
-        )
-end_time= time.time()
+    Arguments:
+        method  : a string or function given as the method argument to scipy.minimize
+        name    : a string describing what this optimization method is
+        ax      : the matplotlib axis to use
+        options : a dictionary passed to the options field on scipy.minimize
+    """
+    # initialize the example with an initial state
+    x0 = np.asarray([0,0,0,0])[:,np.newaxis]
+    sys = EitherOr(x0)
 
-u_opt = res.x.reshape((2,21))
+    print("###########################################")
+    print(name)
+    print("###########################################")
 
-# Evaluate the Results
-print("")
-print("Computation Time: %0.5fs" % (end_time-start_time))
-print("")
-print("Total Robustness Score: %0.5f" % sys.rho(u_opt))
-print("")
-print("Robustness Breakdown: ")
-print("    Control            : %0.5f" % sys.rho(u_opt, spec=sys.control_bounded))
-print("    Obstacle Avoidance : %0.5f" % sys.rho(u_opt, spec=sys.obstacle_avoidance))
-print("    Goal Reaching      : %0.5f" % sys.rho(u_opt, spec=sys.reach_goal))
-print("    Subgoal Reaching   : %0.5f" % sys.rho(u_opt, spec=sys.intermediate_target))
-print("")
+    # Set up and solve the optimization problem
+    u_guess = np.zeros((2,21)).flatten()   # initial guess
+
+    start_time = time.time()
+    res = minimize(sys.cost_function, u_guess,
+            method=method,
+            options=options)
+    end_time= time.time()
+
+    u_opt = res.x.reshape((2,21))
+
+    # Evaluate the Results
+    print("")
+    print("Computation Time: %0.5fs" % (end_time-start_time))
+    print("")
+    print("Total Robustness Score: %0.5f" % sys.rho(u_opt))
+    print("")
+    print("Robustness Breakdown: ")
+    print("    Control            : %0.5f" % sys.rho(u_opt, spec=sys.control_bounded))
+    print("    Obstacle Avoidance : %0.5f" % sys.rho(u_opt, spec=sys.obstacle_avoidance))
+    print("    Goal Reaching      : %0.5f" % sys.rho(u_opt, spec=sys.reach_goal))
+    print("    Subgoal Reaching   : %0.5f" % sys.rho(u_opt, spec=sys.intermediate_target))
+    print("")
+
+    # label with computation time and robustness degree
+    label_text = "%s : %0.1fs, $\\rho$ = %0.2f" % (name, (end_time-start_time), sys.rho(u_opt))
+
+    # Plot the results
+    sys.plot_trajectory(u_opt, ax, label=label_text)
+
+# Set up the plot
+fig, ax = plt.subplots(1)
+
+# Try out the different optimization methods
+add_to_comparison("nelder-mead", "Nelder-Mead", ax, options={'disp':True,'adaptive':False,'maxiter':20000})
+plt.legend()   # show plot in real time
+plt.pause(0.05) 
+
+add_to_comparison("nelder-mead", "Adaptive Nelder-Mead", ax, options={'disp':True,'adaptive':True,'maxiter':20000})
+plt.legend()
+plt.pause(0.05)
+
+add_to_comparison("bfgs", "BFGS (gradient-based)", ax, options={'disp':True,'maxiter':20000})
+plt.legend()
+plt.pause(0.05)
+
+add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
+plt.legend()
+plt.pause(0.05)
+
+add_to_comparison(basinhopping_method, "Basinhopping (sampling-based)", ax)
+plt.legend()
+plt.pause(0.05)
 
 
-# Plot the results
-fix, ax = plt.subplots(1)
-plt.title("Reach Blue then Green, avoiding Red")
-sys.plot_trajectory(u_opt,ax)
+# Display the plot
+ax.set_title("Visit Blue, then visit Green, avoiding Red")
+plt.legend()
 plt.show()

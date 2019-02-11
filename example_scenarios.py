@@ -187,7 +187,7 @@ class ReachAvoid:
         ax.add_patch(obstacle)
         ax.add_patch(target)
 
-    def plot_trajectory(self, u, ax):
+    def plot_trajectory(self, u, ax, label=None):
         """
         Create a plot of the position resulting from applying 
         control u on the matplotlib axis ax. 
@@ -200,7 +200,7 @@ class ReachAvoid:
         x_position = s[0,:]
         y_position = s[1,:]
 
-        ax.scatter(x_position,y_position)
+        ax.plot(x_position,y_position, label=label, linestyle="-", marker="o")
 
 class EitherOr(ReachAvoid):
     """

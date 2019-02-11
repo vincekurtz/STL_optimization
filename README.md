@@ -17,3 +17,8 @@ following the templates in `example_scenarios.py`. The `cost_function` method
 ultimately defines the cost function which we will optimize over. This is a function
 from control inputs to the robustness degree: any number of black-box optimization
 algorithms can be applied to this function.
+
+`optimization_comparison.py` compares several optimization approaches on one of
+the examples in `example_scenarios.py`. It can be used to generate plots like the one shown below:
+
+![comparison figure](comparison.jpg)
