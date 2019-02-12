@@ -11,7 +11,7 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize, basinhopping, OptimizeResult
+from scipy.optimize import minimize, basinhopping, differential_evolution
 from skopt import gp_minimize
 
 # The detailed implementation of this scenario is defined here:
@@ -38,6 +38,16 @@ def gp_bayesian(fun, x0, args=(), **options):
                                 noise=1e-9)
     res.x = np.asarray(res.x)  # ensures output is a numpy array
     return res
+
+def genetic_algorithm(fun, x0, args=(), **options):
+    """
+    Using a genetic algorithm, aka differential evolution
+    """
+    bounds = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
+    res = differential_evolution(fun, bounds,
+                                        disp=True)
+    return res
+
 
 def add_to_comparison(method, name, ax, options=None):
     """
@@ -95,6 +105,10 @@ fig, ax = plt.subplots(1)
 add_to_comparison("nelder-mead", "Nelder-Mead", ax, options={'disp':True,'adaptive':False,'maxiter':20000})
 plt.legend()   # show plot in real time
 plt.pause(0.05) 
+
+add_to_comparison(genetic_algorithm, "Genetic Algorithm", ax)
+plt.legend()
+plt.pause(0.05)
 
 add_to_comparison("nelder-mead", "Adaptive Nelder-Mead", ax, options={'disp':True,'adaptive':True,'maxiter':20000})
 plt.legend()
