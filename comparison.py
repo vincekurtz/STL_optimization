@@ -17,7 +17,7 @@ from scipy.optimize import minimize
 from example_scenarios import EitherOr
 
 # A variety of optimization routines are defined in optimizers.py
-from optimizers import cross_entropy
+from optimizers import cross_entropy, genetic_algorithm, basinhopping_method, gp_bayesian
 
 def add_to_comparison(method, name, ax, options=None):
     """
@@ -76,14 +76,6 @@ add_to_comparison("nelder-mead", "Nelder-Mead", ax, options={'disp':True,'adapti
 plt.legend()   # show plot in real time
 plt.pause(0.05) 
 
-add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
-plt.legend()
-plt.pause(0.05)
-
-add_to_comparison(genetic_algorithm, "Genetic Algorithm", ax)
-plt.legend()
-plt.pause(0.05)
-
 add_to_comparison("nelder-mead", "Adaptive Nelder-Mead", ax, options={'disp':True,'adaptive':True,'maxiter':20000})
 plt.legend()
 plt.pause(0.05)
@@ -93,6 +85,14 @@ plt.legend()
 plt.pause(0.05)
 
 add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
+plt.legend()
+plt.pause(0.05)
+
+add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
+plt.legend()
+plt.pause(0.05)
+
+add_to_comparison(genetic_algorithm, "Genetic Algorithm", ax)
 plt.legend()
 plt.pause(0.05)
 
