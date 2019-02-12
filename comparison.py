@@ -11,43 +11,13 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize, basinhopping, differential_evolution
-from skopt import gp_minimize
+from scipy.optimize import minimize
 
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import EitherOr
 
-# Defining custom optimization functions. These should be defined as
-# described in the scipy.optimize documentation:
-# https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#custom-minimizers
-def basinhopping_method(fun, x0, args=(), **options):
-    """
-    Basinhopping, a simulated annealing-like approach
-    """
-    res = basinhopping(fun, x0, disp=True)
-    return res
-
-def gp_bayesian(fun, x0, args=(), **options):
-    """
-    Baysian optimization with Gaussian Processes
-    """
-    dimensions = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
-    res = gp_minimize(fun, dimensions, 
-                                verbose=True, 
-                                acq_func="EI",
-                                noise=1e-9)
-    res.x = np.asarray(res.x)  # ensures output is a numpy array
-    return res
-
-def genetic_algorithm(fun, x0, args=(), **options):
-    """
-    Using a genetic algorithm, aka differential evolution
-    """
-    bounds = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
-    res = differential_evolution(fun, bounds,
-                                        disp=True)
-    return res
-
+# A variety of optimization routines are defined in optimizers.py
+from optimizers import cross_entropy
 
 def add_to_comparison(method, name, ax, options=None):
     """
@@ -105,6 +75,10 @@ fig, ax = plt.subplots(1)
 add_to_comparison("nelder-mead", "Nelder-Mead", ax, options={'disp':True,'adaptive':False,'maxiter':20000})
 plt.legend()   # show plot in real time
 plt.pause(0.05) 
+
+add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
+plt.legend()
+plt.pause(0.05)
 
 add_to_comparison(genetic_algorithm, "Genetic Algorithm", ax)
 plt.legend()
