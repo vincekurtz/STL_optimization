@@ -21,7 +21,7 @@ x0 = np.asarray([0,0,0,0])[:,np.newaxis]
 example = EitherOr(x0)
 
 # Set up and solve an optimization problem over u
-u_guess = np.zeros((2,21)).flatten()   # initial guess
+u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
 
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,
@@ -29,14 +29,12 @@ res = minimize(example.cost_function, u_guess,
         options={
                     'disp':True,
                     'adaptive':True,
-                    'maxiter':20000,
-                    'fatol':1e-6,
-                    'xatol':1e-6
+                    'maxiter':20000
                 }
         )
 end_time= time.time()
 
-u_opt = res.x.reshape((2,21))
+u_opt = res.x.reshape((2,example.T+1))
 
 # Evaluate the Results
 print("")

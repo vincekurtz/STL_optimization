@@ -208,7 +208,7 @@ class EitherOr(ReachAvoid):
     dynamics past an obstacle and to a goal postion with bounded
     control effort, but first reaching one of two target regions
     """
-    def __init__(self, initial_state):
+    def __init__(self, initial_state, T=20):
         """
         Set up the example scenario with the initial state, which should be a (4,1) numpy
         array with [x,x',y,y'].
@@ -216,7 +216,7 @@ class EitherOr(ReachAvoid):
 
         self.x0 = np.asarray(initial_state)
 
-        self.T = 20  # The time bound of our specification
+        self.T = T  # The time bound of our specification
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
@@ -237,10 +237,10 @@ class EitherOr(ReachAvoid):
 
         # Intermediate target constraints
         at_target1 = self.in_rectangle_formula(self.target1_vert)
-        reach_target1 = at_target1.eventually(0,13)
+        reach_target1 = at_target1.eventually(0,self.T)
         
         at_target2 = self.in_rectangle_formula(self.target2_vert)
-        reach_target2 = at_target2.eventually(0,13)
+        reach_target2 = at_target2.eventually(0,self.T)
 
         self.intermediate_target = reach_target1.disjunction(reach_target2)
 

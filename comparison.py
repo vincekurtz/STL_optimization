@@ -17,7 +17,7 @@ from scipy.optimize import minimize
 from example_scenarios import EitherOr
 
 # A variety of optimization routines are defined in optimizers.py
-from optimizers import cross_entropy, genetic_algorithm, basinhopping_method, gp_bayesian
+from optimizers import cross_entropy, differential_evolution_method, basinhopping_method, gp_bayesian
 
 def add_to_comparison(method, name, ax, options=None):
     """
@@ -31,15 +31,15 @@ def add_to_comparison(method, name, ax, options=None):
         options : a dictionary passed to the options field on scipy.minimize
     """
     # initialize the example with an initial state
-    x0 = np.asarray([0,0,0,0])[:,np.newaxis]
-    sys = EitherOr(x0)
+    x0 = np.asarray([0.0,0,0,0])[:,np.newaxis]
+    sys = EitherOr(x0,T=20)
 
     print("###########################################")
     print(name)
     print("###########################################")
 
     # Set up and solve the optimization problem
-    u_guess = np.zeros((2,21)).flatten()   # initial guess
+    u_guess = np.zeros((2,sys.T+1)).flatten()   # initial guess
 
     start_time = time.time()
     res = minimize(sys.cost_function, u_guess,
@@ -47,7 +47,7 @@ def add_to_comparison(method, name, ax, options=None):
             options=options)
     end_time= time.time()
 
-    u_opt = res.x.reshape((2,21))
+    u_opt = res.x.reshape((2,sys.T+1))
 
     # Evaluate the Results
     print("")
@@ -72,36 +72,40 @@ def add_to_comparison(method, name, ax, options=None):
 fig, ax = plt.subplots(1)
 
 # Try out the different optimization methods
-add_to_comparison("nelder-mead", "Nelder-Mead", ax, options={'disp':True,'adaptive':False,'maxiter':20000})
-plt.legend()   # show plot in real time
-plt.pause(0.05) 
 
-add_to_comparison("nelder-mead", "Adaptive Nelder-Mead", ax, options={'disp':True,'adaptive':True,'maxiter':20000})
-plt.legend()
-plt.pause(0.05)
+#add_to_comparison("nelder-mead", "Nelder-Mead", ax, options={'disp':True,'adaptive':False,'maxiter':20000})
+#plt.legend()   # show plot in real time
+#plt.pause(0.05) 
 
-add_to_comparison("bfgs", "BFGS (gradient-based)", ax, options={'disp':True,'maxiter':20000})
-plt.legend()
-plt.pause(0.05)
+#add_to_comparison("nelder-mead", "Adaptive Nelder-Mead", ax, options={'disp':True,'adaptive':True,'maxiter':20000})
+#plt.legend()
+#plt.pause(0.05)
 
-add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
-plt.legend()
-plt.pause(0.05)
+#add_to_comparison("bfgs", "BFGS (gradient-based)", ax, options={'disp':True,'maxiter':20000})
+#plt.legend()
+#plt.pause(0.05)
+
+#add_to_comparison(basinhopping_method, "Basinhopping (sampling-based)", ax)
+#plt.legend()
+#plt.pause(0.05)
+
+#add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
+#plt.legend()
+#plt.pause(0.05)
 
 add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
 plt.legend()
 plt.pause(0.05)
 
-add_to_comparison(genetic_algorithm, "Genetic Algorithm", ax)
-plt.legend()
-plt.pause(0.05)
+#add_to_comparison(differential_evolution_method, "Differential Evolution", ax)
+#plt.legend()
+#plt.pause(0.05)
 
-add_to_comparison(basinhopping_method, "Basinhopping (sampling-based)", ax)
-plt.legend()
-plt.pause(0.05)
+#add_to_comparison("powell", "Powell", ax, options={'disp':True})
+#plt.legend()
+#plt.pause(0.05)
 
 
 # Display the plot
-ax.set_title("Visit Blue, then visit Green, avoiding Red")
-plt.legend()
+ax.set_title("Visit Blue and Green, avoiding Red")
 plt.show()

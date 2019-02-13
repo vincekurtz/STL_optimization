@@ -21,16 +21,25 @@ def basinhopping_method(fun, x0, args=(), **options):
     Basinhopping, a simulated annealing-like approach.
     This is a wrapper for scipy.optimize.basihopping.
     """
-    res = basinhopping(fun, x0, disp=True)
+    # set termination condition: exit if robustness is above epsilon
+    epsilon = 0.05
+    callback = lambda x, f, accept : True if fun(x) <= -epsilon else False
+    res = basinhopping(fun, x0, disp=True, callback=callback)
     return res
 
-def genetic_algorithm(fun, x0, args=(), **options):
+def differential_evolution_method(fun, x0, args=(), **options):
     """
-    Optimization via a Genetic Algorithm.
+    Optimization via Differential Evolution
     This is a wrapper for scipy.optimize.differential_evolution
     """
     bounds = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
+
+    # sets termination condition: exit if the robustness is above epsilon
+    epsilon = 0.05
+    callback = lambda xk, convergence : True if fun(xk) <= -epsilon else False
+
     res = differential_evolution(fun, bounds,
+                                        callback = callback,
                                         disp=True)
     return res
 
@@ -40,9 +49,16 @@ def gp_bayesian(fun, x0, args=(), **options):
     This is a wrapper for skopt.gp_minimize.
     """
     dimensions = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
+   
+    # set termination condition: exit if the robustness is above epsilon
+    epsilon = 0.0
+    callback = lambda res : True if res.fun <= -epsilon else False
+
     res = gp_minimize(fun, dimensions, 
                                 verbose=True, 
                                 acq_func="EI",
+                                callback=callback,
+                                n_jobs=-1,
                                 noise=1e-9)
     res.x = np.asarray(res.x)  # ensures output is a numpy array
     return res
@@ -52,6 +68,9 @@ def cross_entropy(fun, x0, args=(), **options):
     A native implementation of cross entropy optimization.
     Thanks to Zhongjiao Shi for this implementation.
     """
+    # set termination condition: exit if the robustness is above epsilon
+    epsilon = 0.0
+
     # number of iterations
     if 'niter' in options.keys():
         M = options['niter']
@@ -104,6 +123,7 @@ def cross_entropy(fun, x0, args=(), **options):
         if ('disp' in options.keys()) and options['disp'] and (m%5==0):
             print("Iteration %s / %s   |   iteration average f(x) : %0.3f" % (m,M, -np.mean(J[1,:])))
 
+
         #sorting the robustness degree select the elite group
         J = J[:,J[1].argsort()]
         for k in range(K):
@@ -121,6 +141,10 @@ def cross_entropy(fun, x0, args=(), **options):
 
             pol_cov[:,:,t] = alk*np.mean(con_var,axis=2)+(1-alk)*(last_pol_cov[:,:,t]+np.outer(last_pol_mean[:,t]-pol_mean[:,t],last_pol_mean[:,t]-pol_mean[:,t]))
 
+        # exit if the average prediction is better than the threshold
+        if np.mean(J[1,:]) > epsilon:
+            print("Done!")
+            break
 
     # Get the optimal policy
     x_opt = np.zeros((2,T),dtype=float)
