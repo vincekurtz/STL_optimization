@@ -17,7 +17,7 @@ from scipy.optimize import minimize
 from example_scenarios import EitherOr
 
 # A variety of optimization routines are defined in optimizers.py
-from optimizers import cross_entropy, differential_evolution_method, basinhopping_method, gp_bayesian
+from optimizers import cross_entropy, differential_evolution_method, basinhopping_method, gp_bayesian, fast_bayesian
 
 def add_to_comparison(method, name, ax, options=None):
     """
@@ -93,9 +93,11 @@ fig, ax = plt.subplots(1)
 #plt.legend()
 #plt.pause(0.05)
 
-add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
-plt.legend()
-plt.pause(0.05)
+add_to_comparison(fast_bayesian, "DE + BO", ax)
+
+#add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
+#plt.legend()
+#plt.pause(0.05)
 
 #add_to_comparison(differential_evolution_method, "Differential Evolution", ax)
 #plt.legend()

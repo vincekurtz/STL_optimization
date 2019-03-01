@@ -15,6 +15,7 @@ import numpy as np
 from scipy.optimize import OptimizeResult
 from scipy.optimize import basinhopping, differential_evolution
 from skopt import gp_minimize
+from multiprocessing import Process, Manager
 
 def basinhopping_method(fun, x0, args=(), **options):
     """
@@ -56,12 +57,71 @@ def gp_bayesian(fun, x0, args=(), **options):
 
     res = gp_minimize(fun, dimensions, 
                                 verbose=True, 
+                                n_calls=200,
                                 acq_func="EI",
                                 callback=callback,
                                 n_jobs=-1,
                                 noise=1e-9)
     res.x = np.asarray(res.x)  # ensures output is a numpy array
     return res
+
+def fast_bayesian(fun, x0, args=(), **options):
+    """
+    Baysian optimization with differential evolution initialization. 
+    The idea is to be fast and probabilistically complete. 
+    """
+
+    # bounds for the search space
+    bounds = [(-0.9, 0.9) for i in range(len(x0))]
+
+    # number of times to search with differential evolution, and number of iterations on each restart
+    de_restarts = 4
+    de_iter = 5
+
+    x_guess = []  # initial guesses to use for Bayesian opt. 
+
+
+    print("\n===> Finding initial point with Differential Evolution\n")
+
+    # We'll use multithreading!
+    # calculate an initial guess and add it to a list
+    def target_func(lst, i):
+        np.random.seed()   # need to ensure each thread gets a different random start
+        res = differential_evolution(fun, bounds, disp=True, maxiter=de_iter)
+        lst.append(list(res.x))
+
+    with Manager() as manager:
+        L = manager.list()   # this can be shared between processes
+        processes = []
+        for i in range(de_restarts):
+            p = Process(target=target_func, args=(L, i))
+            p.start()
+            processes.append(p)
+        for p in processes:
+            p.join()
+        for i in range(de_restarts):  # put in nice list format
+            x_guess.append(L[i])
+
+    # Termination condition for bayesian opt: exit if the robustness is above this level
+    epsilon = 0.25
+    callback = lambda res : True if res.fun <= -epsilon else False
+
+    # Now do bayesian optimization until we reach the threshold
+    print("\n===> Optimizing with Bayesian Optimization\n")
+    res = gp_minimize(fun, bounds,
+                            verbose=True,
+                            n_calls=200,
+                            acq_func="LCB",   # use Lower Confidence Bound for better theoretical gaurantees
+                            kappa=1.01,
+                            callback=callback,
+                            n_jobs=-1,
+                            noise=1e-9,
+                            x0=x_guess)
+
+    # ensure output is a np array
+    res.x = np.asarray(res.x)
+    return res
+                                                
 
 def cross_entropy(fun, x0, args=(), **options):
     """
