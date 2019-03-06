@@ -32,7 +32,7 @@ def add_to_comparison(method, name, ax, options=None):
     """
     # initialize the example with an initial state
     x0 = np.asarray([0.0,0,0,0])[:,np.newaxis]
-    sys = EitherOr(x0,T=20)
+    sys = EitherOr(x0,T=75)
 
     print("###########################################")
     print(name)
@@ -89,11 +89,11 @@ fig, ax = plt.subplots(1)
 #plt.legend()
 #plt.pause(0.05)
 
-#add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
+add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
 #plt.legend()
 #plt.pause(0.05)
 
-add_to_comparison(fast_bayesian, "DE + BO", ax)
+#add_to_comparison(fast_bayesian, "DE + BO", ax)
 
 #add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
 #plt.legend()

@@ -36,11 +36,12 @@ def differential_evolution_method(fun, x0, args=(), **options):
     bounds = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
 
     # sets termination condition: exit if the robustness is above epsilon
-    epsilon = 0.05
+    epsilon = 0.1
     callback = lambda xk, convergence : True if fun(xk) <= -epsilon else False
 
     res = differential_evolution(fun, bounds,
                                         callback = callback,
+                                        maxiter = 5,
                                         disp=True)
     return res
 
@@ -52,12 +53,12 @@ def gp_bayesian(fun, x0, args=(), **options):
     dimensions = [(-0.9,0.9) for i in range(len(x0))]  # set limits of search space
    
     # set termination condition: exit if the robustness is above epsilon
-    epsilon = 0.0
+    epsilon = 0.001
     callback = lambda res : True if res.fun <= -epsilon else False
 
     res = gp_minimize(fun, dimensions, 
                                 verbose=True, 
-                                n_calls=200,
+                                n_calls=100,
                                 acq_func="EI",
                                 callback=callback,
                                 n_jobs=-1,
@@ -75,7 +76,7 @@ def fast_bayesian(fun, x0, args=(), **options):
     bounds = [(-0.9, 0.9) for i in range(len(x0))]
 
     # number of times to search with differential evolution, and number of iterations on each restart
-    de_restarts = 4
+    de_restarts = 8
     de_iter = 5
 
     x_guess = []  # initial guesses to use for Bayesian opt. 
@@ -103,7 +104,7 @@ def fast_bayesian(fun, x0, args=(), **options):
             x_guess.append(L[i])
 
     # Termination condition for bayesian opt: exit if the robustness is above this level
-    epsilon = 0.25
+    epsilon = 0.001
     callback = lambda res : True if res.fun <= -epsilon else False
 
     # Now do bayesian optimization until we reach the threshold
