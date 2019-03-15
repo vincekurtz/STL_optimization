@@ -202,6 +202,17 @@ class ReachAvoid:
 
         ax.plot(x_position,y_position, label=label, linestyle="-", marker="o")
 
+    def print_trajectory(self, u):
+        """
+        Print out the resulting trajectory in a way that can it can be copied
+        to another python program for postprocessing/pretty formatting.
+        """
+        # Get the trajectory
+        s = self.STL_signal(u)
+        trajectory = s[0:2,:]   # x and y position
+
+        print(repr(trajectory))
+
 class EitherOr(ReachAvoid):
     """
     This example involves moving a robot with double integrator
