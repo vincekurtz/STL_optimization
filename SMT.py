@@ -7,6 +7,7 @@
 #
 ##
 
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,11 +15,9 @@ import z3
 
 from example_scenarios import EitherOr
 
-def mymax(a,b):
-    """
-    Special function to encode a max constraint in z3
-    """
-    return z3.If(a > b, a, b)
+# Debug
+from signal_temporal_logic import STLFormula
+
 
 def real_to_float(z3_real):
     """
@@ -80,19 +79,29 @@ for i in range(N):
     constraints.append(y4[i] == u2[i])  # y acceleration input
 
 # Control constraints (maybe part of the specification?
-umin = -1.0
-umax = 1.0
-for i in range(N):
-    constraints.append(umin < u1[i])
-    constraints.append(u1[i] < umax)
-    constraints.append(umin < u2[i])
-    constraints.append(u2[i] < umax)
+#umin = -1.0
+#umax = 1.0
+#for i in range(N):
+#    constraints.append(umin < u1[i])
+#    constraints.append(u1[i] < umax)
+#    constraints.append(umin < u2[i])
+#    constraints.append(u2[i] < umax)
 
-constraints.append(u1[0] == 0.9)
 
 # Specification constraints
 spec = sys.control_bounded
-constraints.append( mymax(u1[0],u1[1]+0.2) < 1.0)
+spec = sys.obstacle_avoidance
+spec = sys.full_specification
+xmin = 0.1
+xmax = 1
+above_xmin = STLFormula(lambda s, t : s[t,0] - xmin)
+below_xmax = STLFormula(lambda s, t : -s[t,0] + xmax)
+
+always_above_xmin = above_xmin.always(0,7)
+
+constraints.append( spec.z3_robustness(y.T,0) > 0)
+
+
 #constraints.append( spec.robustness(y,0) > 0)
 #print(sys.full_specification.robustness(y,0))
 
@@ -108,6 +117,11 @@ if str(s.check()) == 'sat':
     m = s.model()
 
     # Extract the resulting trajectory
+    output_trajectory = np.asarray([[real_to_float(m[i]) for i in j] for j in y])
+    print(output_trajectory)
+
+
+
     x_trajectory = [real_to_float(m[i]) for i in x1]
     y_trajectory = [real_to_float(m[i]) for i in x3]
     u_trajectory = [real_to_float(m[i]) for i in u1]

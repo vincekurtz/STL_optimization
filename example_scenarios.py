@@ -7,7 +7,7 @@
 
 from copy import copy
 import numpy as np
-from pySTL import STLFormula
+from signal_temporal_logic import STLFormula
 from matplotlib.patches import Rectangle
 
 class ReachAvoid:

@@ -7,5 +7,4 @@ Using Satisfiability Modulo Theories (SMT) to generate satisfying trajectories f
 - numpy
 - scipy
 - [scikit-optimize](https://scikit-optimize.github.io/)
-- [pySTL](https://github.com/vincekurtz/pySTL)
 
