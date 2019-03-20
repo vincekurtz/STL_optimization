@@ -15,9 +15,6 @@ import z3
 
 from example_scenarios import EitherOr
 
-# Debug
-from signal_temporal_logic import STLFormula
-
 
 def real_to_float(z3_real):
     """
@@ -78,56 +75,42 @@ for i in range(N):
     constraints.append(y3[i] == u1[i])  # x acceleration input
     constraints.append(y4[i] == u2[i])  # y acceleration input
 
-# Control constraints (maybe part of the specification?
-#umin = -1.0
-#umax = 1.0
-#for i in range(N):
-#    constraints.append(umin < u1[i])
-#    constraints.append(u1[i] < umax)
-#    constraints.append(umin < u2[i])
-#    constraints.append(u2[i] < umax)
-
-
 # Specification constraints
-spec = sys.control_bounded
-spec = sys.obstacle_avoidance
 spec = sys.full_specification
-xmin = 0.1
-xmax = 1
-above_xmin = STLFormula(lambda s, t : s[t,0] - xmin)
-below_xmax = STLFormula(lambda s, t : -s[t,0] + xmax)
-
-always_above_xmin = above_xmin.always(0,7)
-
-constraints.append( spec.z3_robustness(y.T,0) > 0)
-
-
-#constraints.append( spec.robustness(y,0) > 0)
-#print(sys.full_specification.robustness(y,0))
-
-
+rho_min = 0.1
+constraints.append( spec.z3_robustness(y.T,0) > rho_min)
 
 # Finally, use z3 to find evaluations of the state, input, and output variables that
 # satisfy the constraints
 s = z3.Solver()
 s.add(constraints)
-print(s.check())
 
-if str(s.check()) == 'sat':
+start_time = time.time()
+result = s.check()
+end_time = time.time()
+
+if str(result) == 'sat':
     m = s.model()
 
     # Extract the resulting trajectory
     output_trajectory = np.asarray([[real_to_float(m[i]) for i in j] for j in y])
-    print(output_trajectory)
 
+    x_trajectory = output_trajectory[0,:]
+    y_trajectory = output_trajectory[1,:]
+    u_opt = output_trajectory[2:4,:]
 
-
-    x_trajectory = [real_to_float(m[i]) for i in x1]
-    y_trajectory = [real_to_float(m[i]) for i in x3]
-    u_trajectory = [real_to_float(m[i]) for i in u1]
-
-    print(x_trajectory)
-    print(u_trajectory)
+    # Examine the resulting robustness degree
+    print("")
+    print("Computation Time: %0.5fs" % (end_time-start_time))
+    print("")
+    print("Total Robustness Score: %0.5f" % sys.rho(u_opt))
+    print("")
+    print("Robustness Breakdown: ")
+    print("    Control            : %0.5f" % sys.rho(u_opt, spec=sys.control_bounded))
+    print("    Obstacle Avoidance : %0.5f" % sys.rho(u_opt, spec=sys.obstacle_avoidance))
+    print("    Goal Reaching      : %0.5f" % sys.rho(u_opt, spec=sys.reach_goal))
+    print("    Subgoal Reaching   : %0.5f" % sys.rho(u_opt, spec=sys.intermediate_target))
+    print("")
 
     # Plot the results
     fig, ax = plt.subplots(1)
@@ -135,5 +118,6 @@ if str(s.check()) == 'sat':
     ax.plot(x_trajectory, y_trajectory, label="trajectory", linestyle="-", marker="o")
 
     plt.show()
-
+else:
+    print("No trajectory found with minimum robustness %s" % rho_min)
 

@@ -132,7 +132,7 @@ class STLFormula:
         Return a new STL Formula object which represents this formula holding
         at all times in [t+t1, t+t2].
 
-            rho(s, F_[t1,t2](phi), t) = min_{k in [t+t1,t+t2]}( rho(s,phi,k) )
+            rho(s, G_[t1,t2](phi), t) = min_{k in [t+t1,t+t2]}( rho(s,phi,k) )
 
         Arguments:
             t1 : an integer between 0 and signal length T
