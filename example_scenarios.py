@@ -27,6 +27,10 @@ class ReachAvoid:
         self.x0 = np.asarray(initial_state)
 
         self.T = 20  # The time bound of our specification
+        
+        # System definition: x_{t+1} = A*x_t + B*u_t
+        self.A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
+        self.B = np.array([[0,0],[1,0],[0,0],[0,1]])
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
@@ -95,10 +99,6 @@ class ReachAvoid:
         Returns:
             s   : a (4,T) numpy array representing the signal we'll check
         """
-        # System definition: x_{t+1} = A*x_t + B*u_t
-        A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
-        B = np.array([[0,0],[1,0],[0,0],[0,1]])
-
         T = u.shape[1]      # number of timesteps
 
         # Pre-alocate the signal
@@ -112,7 +112,7 @@ class ReachAvoid:
             s[2:4,t] = u[:,t]
 
             # Update the system state
-            x = A@x + B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
+            x = self.A@x + self.B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
 
         return s
 
@@ -228,6 +228,10 @@ class EitherOr(ReachAvoid):
         self.x0 = np.asarray(initial_state)
 
         self.T = T  # The time bound of our specification
+
+        # System definition: x_{t+1} = A*x_t + B*u_t
+        self.A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
+        self.B = np.array([[0,0],[1,0],[0,0],[0,1]])
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
