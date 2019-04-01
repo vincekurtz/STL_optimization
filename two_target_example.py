@@ -23,31 +23,39 @@ example = EitherOr(x0)
 
 # Set up and solve an optimization problem over u
 u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
+u_opt = u_guess.reshape((2,example.T+1))
 
-start_time = time.time()
-res = minimize(example.cost_function, 
-        u_guess,
-        method=fast_bayesian)
-end_time= time.time()
+#start_time = time.time()
+#res = minimize(example.cost_function, 
+#        u_guess,
+#        method=fast_bayesian)
+#end_time= time.time()
+#
+#u_opt = res.x.reshape((2,example.T+1))
+#
+## Evaluate the Results
+#print("")
+#print("Computation Time: %0.5fs" % (end_time-start_time))
+#print("")
+#print("Total Robustness Score: %0.5f" % example.rho(u_opt))
+#print("")
+#print("Robustness Breakdown: ")
+#print("    Control            : %0.5f" % example.rho(u_opt, spec=example.control_bounded))
+#print("    Obstacle Avoidance : %0.5f" % example.rho(u_opt, spec=example.obstacle_avoidance))
+#print("    Goal Reaching      : %0.5f" % example.rho(u_opt, spec=example.reach_goal))
+#print("    Subgoal Reaching   : %0.5f" % example.rho(u_opt, spec=example.intermediate_target))
+#print("")
 
-u_opt = res.x.reshape((2,example.T+1))
+mu, var = example.estimate_cost(u_opt)
 
-# Evaluate the Results
-print("")
-print("Computation Time: %0.5fs" % (end_time-start_time))
-print("")
-print("Total Robustness Score: %0.5f" % example.rho(u_opt))
-print("")
-print("Robustness Breakdown: ")
-print("    Control            : %0.5f" % example.rho(u_opt, spec=example.control_bounded))
-print("    Obstacle Avoidance : %0.5f" % example.rho(u_opt, spec=example.obstacle_avoidance))
-print("    Goal Reaching      : %0.5f" % example.rho(u_opt, spec=example.reach_goal))
-print("    Subgoal Reaching   : %0.5f" % example.rho(u_opt, spec=example.intermediate_target))
-print("")
-
+print(mu)
+print(var)
 
 # Plot the results
 fix, ax = plt.subplots(1)
 plt.title("Reach Blue then Green, avoiding Red")
-example.plot_trajectory(u_opt,ax)
+for trial in range(10):
+    u_opt = np.asarray([[0.05 for i in range(example.T+1)] for j in range(2)])
+    example.plot_trajectory(u_opt,ax)
+
 plt.show()

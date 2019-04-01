@@ -95,26 +95,35 @@ class ReachAvoid:
         Returns:
             s   : a (4,T) numpy array representing the signal we'll check
         """
-        # System definition: x_{t+1} = A*x_t + B*u_t
-        A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
-        B = np.array([[0,0],[1,0],[0,0],[0,1]])
-
         T = u.shape[1]      # number of timesteps
 
-        # Pre-alocate the signal
-        s = np.zeros((4,T)) 
+        # System definition: x_{t+1} = A*x_t + B*u_t + w_t
+        A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
+        B = np.array([[0,0],[1,0],[0,0],[0,1]])
+        SigmaW = 0.001*np.eye(4)
 
-        # Run the controls through the system and see what we get
-        x = copy(self.x0)
+        # Output signal y = G*x_t + H*u_t + v_t
+        G = np.array([[1,0,0,0],[0,0,1,0],[0,0,0,0],[0,0,0,0]])
+        H = np.array([[0,0],[0,0],[1,0],[0,1]])
+        SigmaV = 0.01*np.eye(4)
+
+
+        # Initial condition
+        Sigma_init = np.array([[0.1,0,0,0],[0,0,0,0],[0,0,0.1,0],[0,0,0,0]])
+        x = np.random.multivariate_normal(self.x0.flatten(), Sigma_init)[:,np.newaxis]
+
+        # Simulate the system with the given control signal
+        y = np.zeros((4,T)) 
         for t in range(T):
-            # extract the first and third elements of x
-            s[0:2,t] = x[[0,2],:].flatten()   
-            s[2:4,t] = u[:,t]
+            # Calculate the system output
+            v = np.random.multivariate_normal([0,0,0,0],SigmaV)
+            y[:,t] = (G@x + H@u[:,t][:,np.newaxis]).flatten() + v
 
             # Update the system state
-            x = A@x + B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
+            w = np.random.multivariate_normal([0,0,0,0],SigmaW)[:,np.newaxis]
+            x = A@x + B@u[:,t][:,np.newaxis]+w   # ensure u is of shape (2,1) before applying
 
-        return s
+        return y
 
     def rho(self, u, spec=None):
         """
@@ -161,6 +170,29 @@ class ReachAvoid:
         J = - self.rho(u)
 
         return J
+
+    def estimate_cost(self, u, Nsim=10):
+        """
+        Use Nsim forward simulations of the system to come up with an estimate of
+        the cost of applying the control sequence u. This estimate is a MLE (gaussian)
+        estimate of J (J<0 ==> specification satisfied).
+
+        Arguments:
+            u    : a (m,T) numpy array representing a tape of control inputs
+
+        Returns:
+            mu   : a scalar value representing the estimated mean of J
+            var  : a scalar value representing the estimated variance of J
+        """
+
+        Js = []
+        for sim in range(Nsim):
+            Js.append(-self.rho(u))
+
+        mu = np.mean(Js)
+        var = np.var(Js)
+
+        return (mu, var)
 
     def plot_scenario(self, ax):
         """
