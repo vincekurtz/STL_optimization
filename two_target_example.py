@@ -12,6 +12,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from optimizers import fast_bayesian
 
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import EitherOr
@@ -24,14 +25,9 @@ example = EitherOr(x0)
 u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
 
 start_time = time.time()
-res = minimize(example.cost_function, u_guess,
-        method='Nelder-Mead',
-        options={
-                    'disp':True,
-                    'adaptive':True,
-                    'maxiter':20000
-                }
-        )
+res = minimize(example.cost_function, 
+        u_guess,
+        method=fast_bayesian)
 end_time= time.time()
 
 u_opt = res.x.reshape((2,example.T+1))
