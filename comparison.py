@@ -92,12 +92,12 @@ fig, ax = plt.subplots(1)
 #plt.legend()
 #plt.pause(0.05)
 
-add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
-plt.legend()
+#add_to_comparison(gp_bayesian, "Bayesian Optimization (GP)", ax)
+#plt.legend()
 #plt.pause(0.05)
 
-#add_to_comparison(fast_bayesian, "Bayesian Optimization with DE initialization", ax)
-#lt.legend
+add_to_comparison(fast_bayesian, "Bayesian Optimization with DE initialization", ax)
+plt.legend
 #plt.pause(0.05)
 
 #add_to_comparison(cross_entropy, "Cross-entropy Optimization", ax, options={'disp':True,'niter':200})
@@ -111,7 +111,6 @@ plt.legend()
 #add_to_comparison("powell", "Powell", ax, options={'disp':True})
 #plt.legend()
 #plt.pause(0.05)
-
 
 # Display the plot
 ax.set_title("Visit Blue and Green, avoiding Red")
