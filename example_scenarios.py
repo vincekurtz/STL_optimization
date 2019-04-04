@@ -18,7 +18,7 @@ class ReachAvoid:
 
     It also serves as a template class for more complex examples.
     """
-    def __init__(self, initial_state):
+    def __init__(self, initial_state, deterministic=False):
         """
         Set up the example scenario with the initial state, which should be a (4,1) numpy
         array with [x,x',y,y'].
@@ -27,6 +27,8 @@ class ReachAvoid:
         self.x0 = np.asarray(initial_state)
 
         self.T = 20  # The time bound of our specification
+
+        self.deterministic=deterministic   # whether the system is stochastic or not
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
@@ -110,18 +112,28 @@ class ReachAvoid:
 
         # Initial condition
         Sigma_init = np.array([[0.1,0,0,0],[0,0,0,0],[0,0,0.1,0],[0,0,0,0]])
-        x = np.random.multivariate_normal(self.x0.flatten(), Sigma_init)[:,np.newaxis]
+        if self.deterministic:
+            x = self.x0
+        else:
+            x = np.random.multivariate_normal(self.x0.flatten(), Sigma_init)[:,np.newaxis]
+
 
         # Simulate the system with the given control signal
         y = np.zeros((4,T)) 
         for t in range(T):
             # Calculate the system output
-            v = np.random.multivariate_normal([0,0,0,0],SigmaV)
-            y[:,t] = (G@x + H@u[:,t][:,np.newaxis]).flatten() + v
+            y[:,t] = (G@x + H@u[:,t][:,np.newaxis]).flatten()
 
             # Update the system state
-            w = np.random.multivariate_normal([0,0,0,0],SigmaW)[:,np.newaxis]
-            x = A@x + B@u[:,t][:,np.newaxis]+w   # ensure u is of shape (2,1) before applying
+            x = A@x + B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
+
+            if not self.deterministic:
+                # Add measurement and process noise
+                v = np.random.multivariate_normal([0,0,0,0],SigmaV)
+                w = np.random.multivariate_normal([0,0,0,0],SigmaW)[:,np.newaxis]
+
+                y[:,t] += v
+                x += w
 
         return y
 
@@ -251,7 +263,7 @@ class EitherOr(ReachAvoid):
     dynamics past an obstacle and to a goal postion with bounded
     control effort, but first reaching one of two target regions
     """
-    def __init__(self, initial_state, T=20):
+    def __init__(self, initial_state, T=20, deterministic=False):
         """
         Set up the example scenario with the initial state, which should be a (4,1) numpy
         array with [x,x',y,y'].
@@ -260,6 +272,8 @@ class EitherOr(ReachAvoid):
         self.x0 = np.asarray(initial_state)
 
         self.T = T  # The time bound of our specification
+        
+        self.deterministic=deterministic   # whether the system is stochastic or not
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
