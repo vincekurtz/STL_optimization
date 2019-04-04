@@ -31,7 +31,7 @@ def get_next_sample(model, X, bounds, n_restarts=25):
     min_x = None
 
     def min_obj(X):
-        return LCB(model, X, beta=1.01)
+        return LCB(model, X, beta=0.5)
 
     for x0 in np.random.uniform(bounds[:,0], bounds[:,1], size=(n_restarts, dim)):
         res = minimize(min_obj, x0=x0, bounds=bounds, method='L-BFGS-B')
@@ -43,12 +43,12 @@ def get_next_sample(model, X, bounds, n_restarts=25):
 
 # Target function that we'll approximate
 def f(X):
-    return -np.sin(3*X) - X**2 + 0.7*X
+    return np.sin(3*X) + X**2 - 0.7*X
 
 bounds = np.asarray([[-1.0,2.0]])
 
 # Take initial samples and record the associated uncertainty
-X = np.random.uniform(-1,2,5)[:,None]
+X = np.random.uniform(-1,2,2)[:,None]
 error = np.random.normal(0,0.2,X.size)[:,None]
 Y = f(X) + error
 
@@ -58,13 +58,13 @@ fig, ax = plt.subplots(1,2)
 n_iter = 10
 for i in range(n_iter):
     # Update the GP with existing samples
-    kern = GPy.kern.RBF(input_dim=1,variance=1,lengthscale=3) + GPy.kern.Bias(1)
+    kern = GPy.kern.RBF(input_dim=1,variance=1,lengthscale=0.5)# + GPy.kern.Bias(1)
     m = GPy.models.GPHeteroscedasticRegression(X,Y,kern)
 
     # Use the (known) uncertainty on each observation
     m['.*het_Gauss.variance'] = abs(error) #Set the noise parameters to the error in Y
     m.het_Gauss.variance.fix() #We can fix the noise term, since we already know it
-    m.optimize()
+    #m.optimize()
 
     # Get the next sampling point
     #X_next = np.asarray([np.random.uniform(-1,2)])
