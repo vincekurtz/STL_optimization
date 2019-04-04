@@ -15,6 +15,7 @@ from scipy.optimize import minimize
 
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import EitherOr
+from optimizers import fast_bayesian
 
 # initialize the example with an initial state
 x0 = np.asarray([0,0,0,0])[:,np.newaxis]
@@ -25,12 +26,7 @@ u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
 
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,
-        method='Nelder-Mead',
-        options={
-                    'disp':True,
-                    'adaptive':True,
-                    'maxiter':20000
-                }
+        method=fast_bayesian
         )
 end_time= time.time()
 
