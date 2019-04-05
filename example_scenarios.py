@@ -8,6 +8,7 @@
 from copy import copy
 import numpy as np
 from pySTL import STLFormula
+from scipy import stats
 from matplotlib.patches import Rectangle
 
 class ReachAvoid:
@@ -18,7 +19,7 @@ class ReachAvoid:
 
     It also serves as a template class for more complex examples.
     """
-    def __init__(self, initial_state, deterministic=False):
+    def __init__(self, initial_state):
         """
         Set up the example scenario with the initial state, which should be a (4,1) numpy
         array with [x,x',y,y'].
@@ -27,8 +28,6 @@ class ReachAvoid:
         self.x0 = np.asarray(initial_state)
 
         self.T = 20  # The time bound of our specification
-
-        self.deterministic=deterministic   # whether the system is stochastic or not
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
@@ -85,7 +84,7 @@ class ReachAvoid:
 
         return in_rectangle
 
-    def STL_signal(self, u):
+    def STL_signal(self, u, deterministic=False):
         """ 
         Maps a control signal u and an initial condition to an STL signal we can check. 
         This signal we will check is composed of the (x,y) position of the robot 
@@ -102,7 +101,7 @@ class ReachAvoid:
         # System definition: x_{t+1} = A*x_t + B*u_t + w_t
         A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
         B = np.array([[0,0],[1,0],[0,0],[0,1]])
-        SigmaW = 0.001*np.eye(4)
+        SigmaW = 0.000*np.eye(4)
 
         # Output signal y = G*x_t + H*u_t + v_t
         G = np.array([[1,0,0,0],[0,0,1,0],[0,0,0,0],[0,0,0,0]])
@@ -111,8 +110,8 @@ class ReachAvoid:
 
 
         # Initial condition
-        Sigma_init = np.array([[0.1,0,0,0],[0,0,0,0],[0,0,0.1,0],[0,0,0,0]])
-        if self.deterministic:
+        Sigma_init = 1*np.array([[0.1,0,0,0],[0,0,0,0],[0,0,0.1,0],[0,0,0,0]])
+        if deterministic:
             x = self.x0
         else:
             x = np.random.multivariate_normal(self.x0.flatten(), Sigma_init)[:,np.newaxis]
@@ -127,7 +126,7 @@ class ReachAvoid:
             # Update the system state
             x = A@x + B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
 
-            if not self.deterministic:
+            if not deterministic:
                 # Add measurement and process noise
                 v = np.random.multivariate_normal([0,0,0,0],SigmaV)
                 w = np.random.multivariate_normal([0,0,0,0],SigmaW)[:,np.newaxis]
@@ -137,7 +136,7 @@ class ReachAvoid:
 
         return y
 
-    def rho(self, u, spec=None):
+    def rho(self, u, spec=None, deterministic=False):
         """
         For a given initial state and control sequence u, calculates rho,
         a scalar value which indicates the degree of satisfaction of the specification.
@@ -155,7 +154,7 @@ class ReachAvoid:
         if spec is None:
             spec = self.full_specification
 
-        s = self.STL_signal(u)
+        s = self.STL_signal(u, deterministic=deterministic)
         rho = spec.robustness(s.T, 0)
 
         return rho
@@ -179,7 +178,7 @@ class ReachAvoid:
         T = int(len(u)/2)
         u = u.reshape((2,T))
 
-        J = - self.rho(u)
+        J = - self.rho(u, deterministic=True)
 
         return J
 
@@ -199,12 +198,36 @@ class ReachAvoid:
 
         Js = []
         for sim in range(Nsim):
-            Js.append(-self.rho(u))
+            Js.append(-self.rho(u, deterministic=False))
 
         mu = np.mean(Js)
         var = np.var(Js)
 
         return (mu, var)
+
+    def probabilistic_cost_function(self, u, Nsim=50):
+        """
+        Return the cost function P(J>0), where J~N(mu,var) is an MLE estimate of
+        the cost of applying control sequence u. (J<0 ==> specification satisfied).
+
+        Arguments:
+            u    : a (m,T) numpy array representing a tape of control inputs
+            Nsim : the number of simulations to use to estimate J
+
+        Returns:
+            mu   : a scalar value representing the estimated mean of J
+        """
+        # enforce that the input is a numpy array
+        u = np.asarray(u)
+
+        # Reshape the control input to (mxT). Vector input is required for some optimization libraries
+        T = int(len(u)/2)
+        u = u.reshape((2,T))
+
+        J, varJ = self.estimate_cost(u, Nsim=Nsim)
+
+        return 1-stats.norm.cdf(0,J,varJ)  
+        
 
     def plot_scenario(self, ax):
         """
@@ -263,7 +286,7 @@ class EitherOr(ReachAvoid):
     dynamics past an obstacle and to a goal postion with bounded
     control effort, but first reaching one of two target regions
     """
-    def __init__(self, initial_state, T=20, deterministic=False):
+    def __init__(self, initial_state, T=20):
         """
         Set up the example scenario with the initial state, which should be a (4,1) numpy
         array with [x,x',y,y'].
@@ -272,8 +295,6 @@ class EitherOr(ReachAvoid):
         self.x0 = np.asarray(initial_state)
 
         self.T = T  # The time bound of our specification
-        
-        self.deterministic=deterministic   # whether the system is stochastic or not
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)

@@ -111,7 +111,7 @@ def fast_bayesian(fun, x0, args=(), **options):
     print("\n===> Optimizing with Bayesian Optimization\n")
     res = gp_minimize(fun, bounds,
                             verbose=True,
-                            n_calls=200,
+                            n_calls=100,
                             acq_func="LCB",   # use Lower Confidence Bound for better theoretical gaurantees
                             kappa=1.01,
                             callback=callback,
