@@ -17,22 +17,14 @@ from example_scenarios import ReachAvoid
 
 # initialize the example with an initial state
 x0 = np.asarray([0,0,0,0])[:,np.newaxis]
-example = ReachAvoid(x0)
+example = ReachAvoid(x0,T=10)
 
 # Set up and solve an optimization problem over u
 u_guess = np.zeros((2,21)).flatten()   # initial guess
 
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,
-        method='Nelder-Mead',
-        options={
-                    'disp':True,
-                    'adaptive':True,
-                    'maxiter':20000,
-                    'fatol':1e-6,
-                    'xatol':1e-6
-                }
-        )
+        method='SLSQP')
 end_time= time.time()
 
 u_opt = res.x.reshape((2,21))

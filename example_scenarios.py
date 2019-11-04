@@ -7,8 +7,12 @@
 
 from copy import copy
 import numpy as np
-from pySTL import STLFormula
 from matplotlib.patches import Rectangle
+
+# Choose which robustness measure to use
+#from robustness_measures.standard_robustness import STLFormula
+#from robustness_measures.lse_robustness import STLFormula
+from robustness_measures.agm_robustness import STLFormula
 
 class ReachAvoid:
     """
@@ -18,7 +22,7 @@ class ReachAvoid:
 
     It also serves as a template class for more complex examples.
     """
-    def __init__(self, initial_state):
+    def __init__(self, initial_state, T=20):
         """
         Set up the example scenario with the initial state, which should be a (4,1) numpy
         array with [x,x',y,y'].
@@ -26,7 +30,7 @@ class ReachAvoid:
 
         self.x0 = np.asarray(initial_state)
 
-        self.T = 20  # The time bound of our specification
+        self.T = T  # The time bound of our specification
 
         # Obstacle and goal region vertices: (xmin, xmax, ymin, ymax)
         self.obstacle_vert = (3,5,4,6)
