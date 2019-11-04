@@ -12,7 +12,8 @@ from matplotlib.patches import Rectangle
 # Choose which robustness measure to use
 #from robustness_measures.standard_robustness import STLFormula
 #from robustness_measures.lse_robustness import STLFormula
-from robustness_measures.agm_robustness import STLFormula
+#from robustness_measures.agm_robustness import STLFormula
+from robustness_measures.smooth_robustness import STLFormula
 
 class ReachAvoid:
     """
@@ -158,11 +159,14 @@ class ReachAvoid:
         # enforce that the input is a numpy array
         u = np.asarray(u)
 
+        # control cost
+        ctrl_cost = 0.1*u.T@u;
+
         # Reshape the control input to (mxT). Vector input is required for some optimization libraries
         T = int(len(u)/2)
         u = u.reshape((2,T))
 
-        J = - self.rho(u)
+        J = - self.rho(u) + ctrl_cost
 
         return J
 
