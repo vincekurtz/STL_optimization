@@ -17,7 +17,7 @@ from robustness_measures.smooth_robustness import STLFormula
 
 class ReachAvoid:
     """
-    This example involves moving a robot with double integrator
+    This example involves moving a robot with single integrator
     dynamics past an obstacle and to a goal postion with bounded
     control effort. 
 
@@ -49,8 +49,8 @@ class ReachAvoid:
         self.reach_goal = at_goal.eventually(0,self.T)
 
         # Control constraints
-        umin = - 0.2
-        umax = 0.2
+        umin = -1.0
+        umax = 1.0
         u1_above_min = STLFormula(lambda s, t : s[t,2] - umin)
         u1_below_max = STLFormula(lambda s, t : -s[t,2] + umax)
         u2_above_min = STLFormula(lambda s, t : s[t,3] - umin)
@@ -101,8 +101,8 @@ class ReachAvoid:
             s   : a (4,T) numpy array representing the signal we'll check
         """
         # System definition: x_{t+1} = A*x_t + B*u_t
-        A = np.array([[1,1,0,0],[0,1,0,0],[0,0,1,1],[0,0,0,1]])
-        B = np.array([[0,0],[1,0],[0,0],[0,1]])
+        A = np.eye(2)    # single integrator
+        B = np.eye(2)
 
         T = u.shape[1]      # number of timesteps
 
@@ -112,8 +112,8 @@ class ReachAvoid:
         # Run the controls through the system and see what we get
         x = copy(self.x0)
         for t in range(T):
-            # extract the first and third elements of x
-            s[0:2,t] = x[[0,2],:].flatten()   
+            # Signal that we'll check consists of both states and control inputs 
+            s[0:2,t] = x.flatten()
             s[2:4,t] = u[:,t]
 
             # Update the system state
@@ -160,7 +160,7 @@ class ReachAvoid:
         u = np.asarray(u)
 
         # control cost
-        ctrl_cost = 0.1*u.T@u;
+        ctrl_cost = 0.01*u.T@u;
 
         # Reshape the control input to (mxT). Vector input is required for some optimization libraries
         T = int(len(u)/2)
@@ -223,7 +223,7 @@ class ReachAvoid:
 
 class EitherOr(ReachAvoid):
     """
-    This example involves moving a robot with double integrator
+    This example involves moving a robot with single integrator
     dynamics past an obstacle and to a goal postion with bounded
     control effort, but first reaching one of two target regions
     """
@@ -264,8 +264,8 @@ class EitherOr(ReachAvoid):
         self.intermediate_target = reach_target1.disjunction(reach_target2)
 
         # Control constraints
-        umin = - 0.9
-        umax = 0.9
+        umin = -1.0
+        umax = 1.0
         u1_above_min = STLFormula(lambda s, t : s[t,2] - umin)
         u1_below_max = STLFormula(lambda s, t : -s[t,2] + umax)
         u2_above_min = STLFormula(lambda s, t : s[t,3] - umin)
