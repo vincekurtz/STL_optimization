@@ -12,6 +12,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from autograd import grad
 
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import EitherOr
@@ -21,11 +22,15 @@ from optimizers import fast_bayesian
 x0 = np.asarray([0,0])[:,np.newaxis]
 example = EitherOr(x0,T=15)
 
+# Compute gradient analytically
+cost_function_grad = grad(example.cost_function)
+
 # Set up and solve an optimization problem over u
 u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
 
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,
+        jac=cost_function_grad,
         method='SLSQP'
         )
 end_time= time.time()
