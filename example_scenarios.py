@@ -6,14 +6,15 @@
 ##
 
 from copy import copy
-import numpy as np
+import jax.numpy as np
+from jax.ops import index, index_update, index_add
 from matplotlib.patches import Rectangle
 
 # Choose which robustness measure to use
 #from robustness_measures.standard_robustness import STLFormula
 #from robustness_measures.lse_robustness import STLFormula
 #from robustness_measures.agm_robustness import STLFormula
-from robustness_measures.smooth_robustness import STLFormula
+from robustness_measures.expfrac_robustness import STLFormula
 
 class ReachAvoid:
     """
@@ -113,8 +114,11 @@ class ReachAvoid:
         x = copy(self.x0)
         for t in range(T):
             # Signal that we'll check consists of both states and control inputs 
-            s[0:2,t] = x.flatten()
-            s[2:4,t] = u[:,t]
+
+            # Regular assignment to np arrays causes problems with automatic differentiation,
+            # so we'll need to use jax's indexing functions
+            s = index_add(s, index[0:2,t], x.flatten())   # s[0:2,t] = x.flatten()
+            s = index_add(s, index[2:4,t], u[:,t])        # s[2:4,t] = u[:,t]
 
             # Update the system state
             x = A@x + B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
@@ -157,7 +161,7 @@ class ReachAvoid:
                    (negative ==> satisfied)
         """
         # enforce that the input is a numpy array
-        u = np.asarray(u)
+        u = np.array(u)
 
         # control cost
         ctrl_cost = 0.01*u.T@u;

@@ -1,11 +1,11 @@
 ##
 #
 # Code for specifing STL formulas and evaluating the robustness
-# of STL signals, our smooth underapproximation of min and max functions.
+# of STL signals, the exponential fraction underapproximation of min and max functions.
 #
 ##
 
-import numpy as np
+import jax.numpy as np
 
 class STLFormula:
     """
@@ -47,7 +47,7 @@ class STLFormula:
         Arguments:
             second_formula : an STL Formula or predicate defined over the same signal s.
         """
-        new_robustness = lambda s, t : min_smooth( [self.robustness(s,t),
+        new_robustness = lambda s, t : min_expfrac( [self.robustness(s,t),
                                             second_formula.robustness(s,t)] )
         new_formula = STLFormula(new_robustness)
 
@@ -63,7 +63,7 @@ class STLFormula:
         Arguments:
             second_formula : an STL Formula or predicate defined over the same signal s.
         """
-        new_robustness = lambda s, t : max_smooth( [self.robustness(s,t),
+        new_robustness = lambda s, t : max_expfrac( [self.robustness(s,t),
                                             second_formula.robustness(s,t)] )
         new_formula = STLFormula(new_robustness)
 
@@ -80,7 +80,7 @@ class STLFormula:
             t1 : an integer between 0 and signal length T
             t2 : an integer between t1 and signal length T
         """
-        new_robustness = lambda s, t : max_smooth([ self.robustness(s,k) for k in range(t+t1, t+t2+1)])
+        new_robustness = lambda s, t : max_expfrac([ self.robustness(s,k) for k in range(t+t1, t+t2+1)])
 
         new_formula = STLFormula(new_robustness)
 
@@ -97,13 +97,13 @@ class STLFormula:
             t1 : an integer between 0 and signal length T
             t2 : an integer between t1 and signal length T
         """
-        new_robustness = lambda s, t : min_smooth([ self.robustness(s,k) for k in range(t+t1, t+t2+1)])
+        new_robustness = lambda s, t : min_expfrac([ self.robustness(s,k) for k in range(t+t1, t+t2+1)])
 
         new_formula = STLFormula(new_robustness)
 
         return new_formula
 
-def max_smooth(l,k=1.0):
+def max_expfrac(l,k=2.0):
     """
     Compute the LogSumExp approximation of the maximum value of a list. 
     """
@@ -111,8 +111,8 @@ def max_smooth(l,k=1.0):
     exp = np.exp(k*l)
     return np.sum(l*exp)/np.sum(exp)
 
-def min_smooth(l,k=1.0):
+def min_expfrac(l,k=2.0):
     """
     Compute the LogSumExp approximation of the minimum value of a list. 
     """
-    return max_smooth(l,-k)
+    return max_expfrac(l,-k)

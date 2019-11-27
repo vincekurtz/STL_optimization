@@ -21,6 +21,7 @@ example = ReachAvoid(x0,T=20)
 
 # Set up and solve an optimization problem over u
 u_guess = np.zeros((2,21)).flatten()   # initial guess
+u_guess = np.random.rand(u_guess.shape[0])
 
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,

@@ -11,7 +11,7 @@
 #
 ##
 
-import numpy as np
+import jax.numpy as np
 from scipy.optimize import OptimizeResult
 from scipy.optimize import basinhopping, differential_evolution
 from skopt import gp_minimize

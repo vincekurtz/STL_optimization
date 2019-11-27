@@ -26,7 +26,7 @@ u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
 
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,
-        method='BFGS'
+        method='SLSQP'
         )
 end_time= time.time()
 
