@@ -5,7 +5,7 @@
 #
 ##
 
-import numpy as np
+import autograd.numpy as np
 
 class STLFormula:
     """
@@ -103,15 +103,15 @@ class STLFormula:
 
         return new_formula
 
-def max_lse(l,k=1.0):
+def max_lse(x,k=1.0):
     """
     Compute the LogSumExp approximation of the maximum value of a list. 
     """
-    l = np.asarray(l)
+    x = np.array(x)
     return 1/float(k) * np.log(np.sum(np.exp(k*l)))
 
-def min_lse(l,k=1.0):
+def min_lse(x,k=1.0):
     """
     Compute the LogSumExp approximation of the minimum value of a list. 
     """
-    return max_lse(l,-k)
+    return max_lse(x,-k)

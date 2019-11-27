@@ -6,8 +6,7 @@
 ##
 
 from copy import copy
-import jax.numpy as np
-from jax.ops import index, index_update, index_add
+import autograd.numpy as np
 from matplotlib.patches import Rectangle
 
 # Choose which robustness measure to use
@@ -107,18 +106,17 @@ class ReachAvoid:
 
         T = u.shape[1]      # number of timesteps
 
-        # Pre-alocate the signal
-        s = np.zeros((4,T)) 
+        # Starting state
+        x = copy(self.x0)
+
+        # Signal that we'll check consists of both states and control inputs 
+        s = np.hstack([x.flatten(),u[:,0]])[np.newaxis].T
 
         # Run the controls through the system and see what we get
-        x = copy(self.x0)
-        for t in range(T):
-            # Signal that we'll check consists of both states and control inputs 
-
-            # Regular assignment to np arrays causes problems with automatic differentiation,
-            # so we'll need to use jax's indexing functions
-            s = index_add(s, index[0:2,t], x.flatten())   # s[0:2,t] = x.flatten()
-            s = index_add(s, index[2:4,t], u[:,t])        # s[2:4,t] = u[:,t]
+        for t in range(1,T):
+            # Autograd doesn't support array assignment, so we can't pre-allocate s here
+            s_t = np.hstack([x.flatten(),u[:,t]])[np.newaxis].T
+            s = np.hstack([s,s_t])
 
             # Update the system state
             x = A@x + B@u[:,t][:,np.newaxis]   # ensure u is of shape (2,1) before applying
@@ -160,17 +158,12 @@ class ReachAvoid:
             J    : a scalar value indicating the degree of satisfaction of the specification.
                    (negative ==> satisfied)
         """
-        # enforce that the input is a numpy array
-        u = np.array(u)
-
-        # control cost
-        ctrl_cost = 0.01*u.T@u;
 
         # Reshape the control input to (mxT). Vector input is required for some optimization libraries
         T = int(len(u)/2)
         u = u.reshape((2,T))
 
-        J = - self.rho(u) + ctrl_cost
+        J = - self.rho(u)
 
         return J
 

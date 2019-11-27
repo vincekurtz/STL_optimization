@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import time
-import numpy as onp                     # original numpy
-import jax.numpy as np                  # wrapped numpy
-from jax import jacfwd, jacrev, grad    # automatic differentiation
+import autograd.numpy as np  # wrapped numpy
+from autograd import grad    # symbolic differentiation
 
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import ReachAvoid
@@ -17,19 +16,18 @@ u_guess = np.zeros((2,21)).flatten()   # initial guess
 #u_guess = np.random.rand(u_guess.shape[0])
 
 # Compute gradient of cost function
-cost_function_grad = jacfwd(example.cost_function)
+cost_function_grad = grad(example.cost_function)
 
 # Evaluate cost function at initial guess
 st = time.time()
-print(example.cost_function(u_guess))
-print(time.time() - st)
+J = example.cost_function(u_guess)
+print("cost: %s" % J)
+print("compute time: %s" % (time.time()-st))
 
 # Evaluate gradient at initial guess
 st = time.time()
-print(cost_function_grad(u_guess))
-print(time.time() - st)
-
-st = time.time()
-print(cost_function_grad(onp.random.rand(u_guess.shape[0])))
-print(time.time() - st)
+dJdu = cost_function_grad(u_guess)
+print("gradient: %s" % dJdu)
+print("compute time: %s" % (time.time()-st))
+#print(cost_function_grad(onp.random.rand(u_guess.shape[0])))
 

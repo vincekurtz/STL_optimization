@@ -5,7 +5,7 @@
 #
 ##
 
-import jax.numpy as np
+import autograd.numpy as np
 
 class STLFormula:
     """
@@ -107,7 +107,7 @@ def max_expfrac(l,k=2.0):
     """
     Compute the LogSumExp approximation of the maximum value of a list. 
     """
-    l = np.asarray(l)
+    l = np.array(l)
     exp = np.exp(k*l)
     return np.sum(l*exp)/np.sum(exp)
 

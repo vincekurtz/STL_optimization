@@ -7,7 +7,7 @@ Comparison of optimization methods for controller synthesis from STL specificati
 - numpy
 - scipy
 - matplotlib
-- [JAX](https://jax.readthedocs.io/)
+- autograd
 - [scikit-optimize](https://scikit-optimize.github.io/)
 
 ## Usage
