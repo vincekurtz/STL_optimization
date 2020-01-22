@@ -12,18 +12,22 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-from autograd import grad
+from autograd import grad, hessian
 
 # The detailed implementation of this scenario is defined here:
 from example_scenarios import EitherOr
 from optimizers import fast_bayesian
 
+# Number of steps in the specification
+T = 20
+
 # initialize the example with an initial state
 x0 = np.asarray([0,0])[:,np.newaxis]
-example = EitherOr(x0,T=15)
+example = EitherOr(x0,T=T)
 
 # Compute gradient analytically
 cost_function_grad = grad(example.cost_function)
+cost_function_hess = hessian(example.cost_function)
 
 # Set up and solve an optimization problem over u
 u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
@@ -31,6 +35,7 @@ u_guess = np.zeros((2,example.T+1)).flatten()   # initial guess
 start_time = time.time()
 res = minimize(example.cost_function, u_guess,
         jac=cost_function_grad,
+        #hess=cost_function_hess,
         method='SLSQP'
         )
 end_time= time.time()

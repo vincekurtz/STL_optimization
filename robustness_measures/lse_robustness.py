@@ -5,7 +5,48 @@
 #
 ##
 
-import autograd.numpy as np
+from robustness_measures.logsumexp import *
+#import autograd.numpy as np
+#from autograd.extend import primitive, defvjp
+
+def max_lse(x):
+    """
+    Compute the LogSumExp approximation of the maximum value of a list. 
+    """
+    x = np.array(x)
+    return logsumexp(x)
+
+def min_lse(x):
+    """
+    Compute the LogSumExp approximation of the minimum value of a list. 
+    """
+    k = -1.0
+    x = np.array(x)
+    return 1/float(k) * np.log(np.sum(np.exp(k*x)))
+
+
+#@primitive
+#def max_lse(x):
+#    """
+#    Compute the LogSumExp approximation of the maximum value of a list. 
+#    """
+#    k = 1.0
+#    x = np.asarray(x)
+#    return 1/float(k) * np.log(np.sum(np.exp(k*x)))
+#
+#def logsumexp_vjp(ans,x):
+#    x_shape = x.shape
+#    return lambda g: np.full(x_shape, g) * np.exp(x-np.full(x_shape,ans))
+#
+#defvjp(max_lse, logsumexp_vjp)
+#
+#def min_lse(x):
+#    """
+#    Compute the LogSumExp approximation of the minimum value of a list. 
+#    """
+#    k = -1.0
+#    x = np.array(x)
+#    return 1/float(k) * np.log(np.sum(np.exp(k*x)))
 
 class STLFormula:
     """
@@ -103,15 +144,3 @@ class STLFormula:
 
         return new_formula
 
-def max_lse(x,k=1.0):
-    """
-    Compute the LogSumExp approximation of the maximum value of a list. 
-    """
-    x = np.array(x)
-    return 1/float(k) * np.log(np.sum(np.exp(k*l)))
-
-def min_lse(x,k=1.0):
-    """
-    Compute the LogSumExp approximation of the minimum value of a list. 
-    """
-    return max_lse(x,-k)

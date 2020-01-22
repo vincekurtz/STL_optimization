@@ -108,12 +108,12 @@ def max_agm(l):
     """
     Compute the average-based approximation of the maximum value of a list. 
     """
-    l = np.asarray(l)
+    l = np.array(l)
     return np.mean(l)   # arithmetic mean
 
 def min_agm(l):
     """
     Compute the average-based approximation of the minimum value of a list. 
     """
-    l = np.asarray(l)
+    l = np.array(l)
     return gmean(l)    # geometric mean

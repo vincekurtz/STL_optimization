@@ -8,12 +8,14 @@
 from copy import copy
 import autograd.numpy as np
 from matplotlib.patches import Rectangle
+import time
 
 # Choose which robustness measure to use
 #from robustness_measures.standard_robustness import STLFormula
-#from robustness_measures.lse_robustness import STLFormula
+#from robustness_measures.lse_robustness import *
 #from robustness_measures.agm_robustness import STLFormula
-from robustness_measures.expfrac_robustness import STLFormula
+#from robustness_measures.expfrac_robustness import STLFormula
+from robustness_measures.test_robustness import STLFormula
 
 class ReachAvoid:
     """
@@ -159,11 +161,14 @@ class ReachAvoid:
                    (negative ==> satisfied)
         """
 
+        # Add a small control penalty
+        control_cost = 0.01* u.T @ u
+
         # Reshape the control input to (mxT). Vector input is required for some optimization libraries
         T = int(len(u)/2)
         u = u.reshape((2,T))
 
-        J = - self.rho(u)
+        J = - self.rho(u) + control_cost
 
         return J
 
@@ -261,8 +266,8 @@ class EitherOr(ReachAvoid):
         self.intermediate_target = reach_target1.disjunction(reach_target2)
 
         # Control constraints
-        umin = -1.0
-        umax = 1.0
+        umin = -2.0
+        umax = 2.0
         u1_above_min = STLFormula(lambda s, t : s[t,2] - umin)
         u1_below_max = STLFormula(lambda s, t : -s[t,2] + umax)
         u2_above_min = STLFormula(lambda s, t : s[t,3] - umin)

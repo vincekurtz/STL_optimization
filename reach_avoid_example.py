@@ -17,14 +17,15 @@ from autograd import grad
 from example_scenarios import ReachAvoid
 
 # initialize the example with an initial state
+T = 20   # number of timesteps
 x0 = np.asarray([0,0])[:,np.newaxis]
-example = ReachAvoid(x0,T=20)
+example = ReachAvoid(x0,T=T)
 
 # Compute the gradient of the cost function 
 cost_function_grad = grad(example.cost_function)
 
 # Set up and solve an optimization problem over u
-u_guess = np.zeros((2,21)).flatten()   # initial guess
+u_guess = np.zeros((2,T+1)).flatten()   # initial guess
 u_guess = np.random.rand(u_guess.shape[0])
 
 start_time = time.time()
@@ -33,7 +34,7 @@ res = minimize(example.cost_function, u_guess,
         method='SLSQP')
 end_time= time.time()
 
-u_opt = res.x.reshape((2,21))
+u_opt = res.x.reshape((2,T+1))
 
 # Evaluate the Results
 print("")
